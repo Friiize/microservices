@@ -11,6 +11,7 @@ namespace MicroServices.Controllers
     {
         private readonly MicroServiceDbContext _context;
 
+        //Injecting our Db context the be used by the controllers
         public PersonsController(MicroServiceDbContext context)
         {
             _context = context;
@@ -23,6 +24,7 @@ namespace MicroServices.Controllers
             var persons = from p in _context.Persons select p;
             //Check if null
             if (!persons.Any()) return NotFound("Users not found.");
+            //Check matching values between firstname or name avoiding case sensitive and can still match any missing part of name/firstname
             if (!string.IsNullOrEmpty(firstname)) persons = persons.Where(p => p.FirstName.ToLower().Contains(firstname.ToLower()));
             if (!string.IsNullOrEmpty(name)) persons = persons.Where(p => p.Name.ToLower().Contains(name.ToLower()));
             
@@ -36,6 +38,7 @@ namespace MicroServices.Controllers
         {
             if (_context.Persons == null) return NotFound("Database not found.");
             
+            //Retrieve the person infos by id
             var person = await _context.Persons.FindAsync(id);
         
             //Check if null
@@ -49,16 +52,17 @@ namespace MicroServices.Controllers
         public async Task<IActionResult> PutPerson(Guid id, string? firstname = null, string? name = null)
         {
             if (_context.Persons == null) return NotFound("Database not found.");
-
+            //Retrieve the person infos by id
             var person = await _context.Persons.FindAsync(id);
 
             //Check if null
             if (person == null) return NotFound("User not found.");
+            //Check if values are null or not before updating the person values
             if (!string.IsNullOrEmpty(firstname))person.FirstName = firstname;
             if (!string.IsNullOrEmpty(name)) person.Name = name;
-            _context.Entry(person).State = EntityState.Modified;
 
-                try
+            //Handling the updating operations and potentials Exceptions
+            try
             {
                 await _context.SaveChangesAsync();
             }
@@ -67,7 +71,7 @@ namespace MicroServices.Controllers
                 if (!PersonExists(id)) return NotFound("User not found.");
                 throw;
             }
-            
+            //Return an empty response with status code of 204
             return NoContent();
         }
 
@@ -111,7 +115,7 @@ namespace MicroServices.Controllers
             _context.Persons.Remove(person);
             await _context.SaveChangesAsync();
 
-            //Send a "NoContent" Response to indicate the item is now suppressed
+            //Return an empty response with status code of 204
             return NoContent();
         }
 
