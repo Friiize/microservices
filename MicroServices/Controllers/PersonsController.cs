@@ -22,7 +22,7 @@ namespace MicroServices.Controllers
         {
             var persons = from p in _context.Persons select p;
             //Check if null
-            if (persons == null) return NotFound("Database not found.");
+            if (!persons.Any()) return NotFound("Users not found.");
             if (!string.IsNullOrEmpty(firstname)) persons = persons.Where(p => p.FirstName.ToLower().Contains(firstname.ToLower()));
             if (!string.IsNullOrEmpty(name)) persons = persons.Where(p => p.Name.ToLower().Contains(name.ToLower()));
             
@@ -34,18 +34,22 @@ namespace MicroServices.Controllers
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<Person>> GetPerson(Guid id)
         {
-            var person = await _context.Persons.FindAsync(id);
+            if (_context.Persons == null) return NotFound("Database not found.");
             
+            var person = await _context.Persons.FindAsync(id);
+        
             //Check if null
             if (person == null) return NotFound("User not found.");
             return person;
+            
         }
 
         // PUT: api/Persons/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut]
         public async Task<IActionResult> PutPerson(Guid id, string? firstname = null, string? name = null)
         {
+            if (_context.Persons == null) return NotFound("Database not found.");
+
             var person = await _context.Persons.FindAsync(id);
 
             //Check if null
